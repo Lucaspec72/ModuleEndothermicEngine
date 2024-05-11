@@ -5,6 +5,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{48C347E8-6E7A-4A9C-861F-7DB97B81AC69}|Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule.csproj|c:\\users\\lucas\\documents\\github\\ksp-energydrainer-enginemodule\\ksp-energydrainer-enginemodule\\ksp-energydrainer-enginemodule\\moduleenergydrain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{48C347E8-6E7A-4A9C-861F-7DB97B81AC69}|Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule.csproj|solutionrelative:ksp-energydrainer-enginemodule\\moduleenergydrain.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48C347E8-6E7A-4A9C-861F-7DB97B81AC69}|Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule.csproj|C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\ksp-energydrainer-enginemodule\\startmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{48C347E8-6E7A-4A9C-861F-7DB97B81AC69}|Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule.csproj|solutionrelative:ksp-energydrainer-enginemodule\\startmodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,17 +18,29 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "StartModule.cs",
+              "DocumentMoniker": "C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\StartModule.cs",
+              "RelativeDocumentMoniker": "Ksp-EnergyDrainer-EngineModule\\StartModule.cs",
+              "ToolTip": "C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\StartModule.cs",
+              "RelativeToolTip": "Ksp-EnergyDrainer-EngineModule\\StartModule.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-11T16:36:25.545Z"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "ModuleEnergyDrain.cs",
               "DocumentMoniker": "C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs",
               "RelativeDocumentMoniker": "Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs",
-              "ToolTip": "C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs",
-              "RelativeToolTip": "Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABQAAAAlAAAA",
+              "ToolTip": "C:\\Users\\Lucas\\Documents\\GitHub\\KSP-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs*",
+              "RelativeToolTip": "Ksp-EnergyDrainer-EngineModule\\ModuleEnergyDrain.cs*",
+              "ViewState": "AQIAADQAAAAAAAAAAAAgwEUAAAAgAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-05-06T22:34:17.869Z",
               "EditorCaption": ""
