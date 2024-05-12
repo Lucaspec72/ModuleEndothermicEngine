@@ -14,7 +14,7 @@ namespace Ksp_EnergyDrainer_EngineModule
         public float consumption;
 
         //Display Variables - Are ment to be visible in normal gameplay
-        [KSPField(guiName = "Status", guiActive = true, isPersistant = false)]
+        [KSPField(guiName = "Secondary Status", guiActive = true, isPersistant = false)]
         public string Status;
 
         //Other Variables
@@ -25,13 +25,25 @@ namespace Ksp_EnergyDrainer_EngineModule
         //Resource Hash
         [KSPField]
         public int resHash = 0;
+        //Resource Values
+        [KSPField]
+        public double currentResource;
+        [KSPField]
+        public double totalResource;
+
+        //Boolean to check if launched
+        [KSPField]
+        public bool isLaunched = false;
+        //Boolean to check if flameout was caused by ModuleEnergyDrain
+        [KSPField]
+        public bool flameoutDrainResource = false;
         //Boolean flag to say if something is wrong.
         [KSPField(guiName = "Hook Error", guiActive = false)]
         public bool hookError = true;
         [KSPField(guiName = "Resource Error", guiActive = false)]
         public bool resourceError = true;
-        //Manual Start button
-        [KSPEvent(name = "ManualIgnition", guiName = "Manual Ignition", active = true, guiActive = true)]
+        //Manual Start button, currently unused and disabled by default, but left in for now in case it's needed
+        [KSPEvent(name = "ManualIgnition", guiName = "Manual Ignition", active = true, guiActive = false)]
         public void ManualIgnition()
         {
             InitialiseModule();
@@ -39,7 +51,6 @@ namespace Ksp_EnergyDrainer_EngineModule
             this.part.force_activate();
             this.EngineModule.PlayEngageFX();
         }
-
 
 
         public override void OnStart(PartModule.StartState state)
@@ -50,11 +61,8 @@ namespace Ksp_EnergyDrainer_EngineModule
                 {
                     //things here won't get run either way, just keeping around to know it doesn't work.
                     Debug.Log("[ModuleEnergyDrain]:" + "ONSTART TRIGGER");
-                    //InitialiseModule();
-                    //this fixes it, but wrecks staging, since engine is technically started.
-                    //Need to find some way to make the OnFixedUpdate of the module trigger.
-                    //this.part.force_activate();
-                    //EngineModule.Shutdown();
+                    isLaunched = true;
+                    InitialiseModule();
                 }
                 else
                 {
@@ -102,79 +110,80 @@ namespace Ksp_EnergyDrainer_EngineModule
                 resourceError = true;
                 Debug.Log("[ModuleEnergyDrain]: Base Resource Log (ERROR)");
             }
-            Status = "Not running OnFixedUpdate Error";
+            Status = "Initialised, waiting for FixedUpdate";
         }
 
-        public override void OnActive()
+        public void FixedUpdate()
         {
-            base.OnActive();
+            //to prevent it running in editor.
+            if (isLaunched)
             {
-                //doesn't seem to run, or at least not how i want it to.
-            }
-        }
-        public override void OnInactive()
-        {
-            base.OnInactive();
-            {
-
-            }
-        }
-
-        public override void OnFixedUpdate()
-        {
-            if (hookError == true || resourceError == true)
-            {
-                Debug.Log("[ModuleEnergyDrain]: Error Detected, re-Initialising Module...");
-                InitialiseModule();
-            }
-            if (EngineModule.isEnabled)
-            {
-                //get the consumption by using the base consumption, the amount of time since last update, and the current throttle.
-                double consumptionDelta = consumption * TimeWarp.fixedDeltaTime * EngineModule.currentThrottle;
-                //drain the ressource
-                double resReturn = this.vessel.RequestResource(this.vessel.Parts[0], resHash, consumptionDelta, false);
-                //check if it managed to drain what was needed.
-                if (Math.Abs(consumptionDelta - resReturn) < 0.01)
+                if (hookError == true || resourceError == true)
                 {
-                    //Optionally do some other stuff while engine is running.
-                    Status = "Running";
+                    InitialiseModule();
                 }
-                else
+                this.vessel.GetConnectedResourceTotals(resHash, out currentResource, out totalResource);
+                //EngineModule.isEnabled doesn't seem to work, as it might always be enabled ?
+                if (EngineModule.EngineIgnited)
                 {
-                    EngineModule.Shutdown(); //this is a placeholder function call, idk if Shutdown does what i think it does.
-                }
-            }
-            else
-            {
-                //check if there was a error loading
-                if (!hookError && !resourceError)
-                {
-                    //check if there's enough of the ressource to last one second. Not tested, but math should be sound
-                    if (this.vessel.RequestResource(this.vessel.Parts[0], resHash, consumption, true) - consumption < 0.01)
+                    //get the consumption by using the base consumption, the amount of time since last update, and the current throttle.
+                    double consumptionDelta = consumption * TimeWarp.fixedDeltaTime * EngineModule.currentThrottle;
+                    //drain the ressource
+                    double resReturn = this.vessel.RequestResource(this.vessel.Parts[0], resHash, consumptionDelta, false);
+                    //check if it managed to drain what was needed. 0 might not be valid value
+                    if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && currentResource != 0)
                     {
-                        Status = "Idle";
+                        //Optionally do some other stuff while engine is running.
+                        Status = "Running";
                     }
                     else
                     {
-                        Status = "Out of " + resourceDrained;
+                        //shuts engine down
+                        EngineModule.Shutdown();
                     }
                 }
                 else
                 {
-                    if (hookError == true && resourceError == true)
+                    //check if there was a error loading
+                    if (!hookError && !resourceError)
                     {
-                        Status = "Critical Error, contact mod maker";
-                    }
-                    else if (hookError == true)
-                    {
-                        Status = "Error, Module Can't hook to Engine";
-                    }
-                    else //assumes it's ressource error, wouldn't get here otherwise
-                    {
-                        Status = "Error, Resource in part CFG unknown";
-                    }
-                }
 
+
+                        
+                        //check if there's any amount of the ressource to be consumed
+                        if (!(currentResource == 0))
+                        {
+                            Status = "Idle";
+                            if (flameoutDrainResource)
+                            {
+                                EngineModule.UnFlameout();
+                                flameoutDrainResource = false;
+                            }
+                        }
+                        else
+                        {
+                            Status = "Out of " + resourceDrained;
+                            EngineModule.Flameout("Out of " + resourceDrained);
+                            flameoutDrainResource = true;
+                        }
+                    }
+                    else
+                    {
+                        if (hookError == true && resourceError == true)
+                        {
+                            Status = "Critical Error, contact mod maker";
+                        }
+                        else if (hookError == true)
+                        {
+                            Status = "Error, Module Can't hook to Engine";
+                        }
+                        else //assumes it's ressource error, wouldn't get here otherwise
+                        {
+                            Status = "Error, Resource in part CFG unknown";
+                        }
+                    }
+
+                }
             }
         }
 
