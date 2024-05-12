@@ -18,8 +18,7 @@ namespace Ksp_EnergyDrainer_EngineModule
         public string Status;
 
         //Other Variables
-        [KSPField(guiName = "Current Throttle", guiActive = true, isPersistant = false)]
-        public float currentThrottle;
+
         //Hook to ModuleEnginesFX
         [KSPField]
         public ModuleEnginesFX EngineModule;
@@ -27,10 +26,19 @@ namespace Ksp_EnergyDrainer_EngineModule
         [KSPField]
         public int resHash = 0;
         //Boolean flag to say if something is wrong.
-        [KSPField(guiName = "Error Status", guiActive = false)]
-        public bool hookError = false;
-        [KSPField(guiName = "Error Status", guiActive = false)]
-        public bool resourceError = false;
+        [KSPField(guiName = "Hook Error", guiActive = false)]
+        public bool hookError = true;
+        [KSPField(guiName = "Resource Error", guiActive = false)]
+        public bool resourceError = true;
+        //Manual Start button
+        [KSPEvent(name = "ManualIgnition", guiName = "Manual Ignition", active = true, guiActive = true)]
+        public void ManualIgnition()
+        {
+            InitialiseModule();
+            Events["ManualIgnition"].guiActive = false;
+            this.part.force_activate();
+            this.EngineModule.PlayEngageFX();
+        }
 
 
 
@@ -40,12 +48,13 @@ namespace Ksp_EnergyDrainer_EngineModule
             {
                 if (state != StartState.Editor && state != StartState.None)
                 {
+                    //things here won't get run either way, just keeping around to know it doesn't work.
                     Debug.Log("[ModuleEnergyDrain]:" + "ONSTART TRIGGER");
-                    this.enabled = true;
-                    this.part.force_activate();
-                    hookError = false;
-                    resourceError = false;
-                    InitialiseModule();
+                    //InitialiseModule();
+                    //this fixes it, but wrecks staging, since engine is technically started.
+                    //Need to find some way to make the OnFixedUpdate of the module trigger.
+                    //this.part.force_activate();
+                    //EngineModule.Shutdown();
                 }
                 else
                 {
@@ -59,7 +68,7 @@ namespace Ksp_EnergyDrainer_EngineModule
             //A HORRIBLE MESS, but it works
             try
             {
-                //Get the hook to the ModuleEnginesFX, and the hash to the ressource drained
+                //Get the hook to the ModuleEnginesFX, and the hash to the ressource drained. This worked earlier : this.part.FindModuleImplementing<ModuleEnginesFX>();
                 EngineModule = this.part.FindModuleImplementing<ModuleEnginesFX>();
                 resHash = PartResourceLibrary.Instance.GetDefinition(resourceDrained).id;
                 Debug.Log("[ModuleEnergyDrain]:" + "resHash");
@@ -72,7 +81,7 @@ namespace Ksp_EnergyDrainer_EngineModule
                 Debug.Log("[ModuleEnergyDrain]:" + e.ToString());
             }
             //Had problems with catch, so i run tests here.
-            if (EngineModule == null)
+            if (EngineModule != null)
             {
                 //Base Errors are here to see if things run. It should be updated as soon as the next update. if it doesn't, there's a problem somewhere.
                 hookError = false;
@@ -86,7 +95,6 @@ namespace Ksp_EnergyDrainer_EngineModule
             if (resHash != 0)
             {
                 resourceError = false;
-                //it overwrites Error 1 & 2.
                 Debug.Log("[ModuleEnergyDrain]: Base Resource Log (no-error)");
             }
             else
@@ -97,9 +105,23 @@ namespace Ksp_EnergyDrainer_EngineModule
             Status = "Not running OnFixedUpdate Error";
         }
 
+        public override void OnActive()
+        {
+            base.OnActive();
+            {
+                //doesn't seem to run, or at least not how i want it to.
+            }
+        }
+        public override void OnInactive()
+        {
+            base.OnInactive();
+            {
+
+            }
+        }
+
         public override void OnFixedUpdate()
         {
-            Debug.Log("[ModuleEnergyDrain]: FixedUpdate...");
             if (hookError == true || resourceError == true)
             {
                 Debug.Log("[ModuleEnergyDrain]: Error Detected, re-Initialising Module...");
