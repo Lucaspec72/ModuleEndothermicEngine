@@ -1,4 +1,5 @@
 ﻿using System;
+using KSP.Localization;
 using UnityEngine;
 
 namespace Ksp_EnergyDrainer_EngineModule
@@ -8,13 +9,19 @@ namespace Ksp_EnergyDrainer_EngineModule
         //Guiname and GuiActive are tests to see if they show up.
 
         //CFG Variables
-        [KSPField(guiName = "Target Resource", guiActive = false, isPersistant = false)]
+        [KSPField]
         public string resourceDrained;
-        [KSPField(guiName = "Base Consumption", guiActive = false, isPersistant = false)]
+        [KSPField]
         public float consumption;
+        [KSPField]
+        public bool useThrustCurve = false;
+        //thrustCurve, current default is testing floatcurve provided by jadeofmaar.
+        [KSPField]
+        public FloatCurve thrustCurve;
+
 
         //Display Variables - Are ment to be visible in normal gameplay
-        [KSPField(guiName = "Secondary Status", guiActive = true, isPersistant = false)]
+        [KSPField(guiName = "Secondary Status", guiActive = true)]
         public string Status;
 
         //Other Variables
@@ -27,9 +34,10 @@ namespace Ksp_EnergyDrainer_EngineModule
         public int resHash = 0;
         //Resource Values
         [KSPField]
-        public double currentResource;
+        public double resCurrent;
         [KSPField]
-        public double totalResource;
+        public double resTotal;
+        
 
         //Boolean to check if launched
         [KSPField]
@@ -42,21 +50,22 @@ namespace Ksp_EnergyDrainer_EngineModule
         public bool hookError = true;
         [KSPField(guiName = "Resource Error", guiActive = false)]
         public bool resourceError = true;
-        //Manual Start button, currently unused and disabled by default, but left in for now in case it's needed
-        [KSPEvent(name = "ManualIgnition", guiName = "Manual Ignition", active = true, guiActive = false)]
-        public void ManualIgnition()
-        {
-            InitialiseModule();
-            Events["ManualIgnition"].guiActive = false;
-            this.part.force_activate();
-            this.EngineModule.PlayEngageFX();
-        }
 
+
+        public override string GetModuleDisplayName() => "Engine Secondary Ressource Consumer";
+        public override string GetInfo()
+        {
+            //this works
+            //return "<b><color=#99ff00ff>Consumes :</color></b>\n- <b>"+ resourceDrained +"</b> : " + consumption + "/sec. Max\n"+ Localizer.Format("#autoLOC_245153", new string[1] { XKCDColors.HexFormat.KSPUnnamedCyan });
+            return "<b><color=#99ff00ff>Consumes :</color></b>\n"+ Localizer.Format("#autoLOC_220756", new string[2] {resourceDrained,consumption.ToString()}) + Localizer.Format("#autoLOC_245153", new string[1] { XKCDColors.HexFormat.KSPUnnamedCyan });
+        }
 
         public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             {
+                // possible improvement
+                // could probably destroy the module in the editor, that way i could remove the isLaunched variable and the check for it every FixedUpdate.
                 if (state != StartState.Editor && state != StartState.None)
                 {
                     //things here won't get run either way, just keeping around to know it doesn't work.
@@ -88,6 +97,7 @@ namespace Ksp_EnergyDrainer_EngineModule
             {
                 Debug.Log("[ModuleEnergyDrain]:" + e.ToString());
             }
+
             //Had problems with catch, so i run tests here.
             if (EngineModule != null)
             {
@@ -122,16 +132,21 @@ namespace Ksp_EnergyDrainer_EngineModule
                 {
                     InitialiseModule();
                 }
-                this.vessel.GetConnectedResourceTotals(resHash, out currentResource, out totalResource);
+
+                this.vessel.GetConnectedResourceTotals(resHash, out resCurrent, out resTotal);
                 //EngineModule.isEnabled doesn't seem to work, as it might always be enabled ?
                 if (EngineModule.EngineIgnited)
                 {
                     //get the consumption by using the base consumption, the amount of time since last update, and the current throttle.
                     double consumptionDelta = consumption * TimeWarp.fixedDeltaTime * EngineModule.currentThrottle;
+                    if (useThrustCurve)
+                    {
+                        consumptionDelta *= thrustCurve.Evaluate((float)(resCurrent / resTotal));
+                    }
                     //drain the ressource
                     double resReturn = this.vessel.RequestResource(this.vessel.Parts[0], resHash, consumptionDelta, false);
                     //check if it managed to drain what was needed. 0 might not be valid value
-                    if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && currentResource != 0)
+                    if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && resCurrent != 0)
                     {
                         //Optionally do some other stuff while engine is running.
                         Status = "Running";
@@ -147,11 +162,8 @@ namespace Ksp_EnergyDrainer_EngineModule
                     //check if there was a error loading
                     if (!hookError && !resourceError)
                     {
-
-
-                        
                         //check if there's any amount of the ressource to be consumed
-                        if (!(currentResource == 0))
+                        if (!(resCurrent == 0))
                         {
                             Status = "Idle";
                             if (flameoutDrainResource)
@@ -167,6 +179,7 @@ namespace Ksp_EnergyDrainer_EngineModule
                             flameoutDrainResource = true;
                         }
                     }
+                    //this is all only used for the Secondary Status, could be disabled if not using.
                     else
                     {
                         if (hookError == true && resourceError == true)
