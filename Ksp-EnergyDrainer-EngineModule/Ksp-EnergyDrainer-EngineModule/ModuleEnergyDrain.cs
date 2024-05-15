@@ -1,30 +1,34 @@
 ﻿using System;
+using System.CodeDom;
+using System.Collections.Generic;
+using System.ComponentModel;
 using KSP.Localization;
+using KSP.UI.Screens;
+using KSP.UI.TooltipTypes;
 using UnityEngine;
 
-namespace Ksp_EnergyDrainer_EngineModule
+namespace NoDeltaVPropEngineModule
 {
-    public class ModuleEnergyDrain : PartModule
+    public class NoDeltaVPropEngineModule : PartModule
     {
-        //Guiname and GuiActive are tests to see if they show up.
-
         //CFG Variables
         [KSPField]
         public string resourceDrained;
         [KSPField]
         public float consumption;
         [KSPField]
-        public bool useThrustCurve = false;
-        //thrustCurve, current default is testing floatcurve provided by jadeofmaar.
+        public bool useConsumptionCurve = false;
         [KSPField]
-        public FloatCurve thrustCurve;
+        public bool useThrustCurve = false;
+        [KSPField]
+        public FloatCurve consumptionCurve = new FloatCurve(new Keyframe[2]{new Keyframe(0f, 1f), new Keyframe(1f, 1f)}); //defaults to a curve that acts like stock.
+        [KSPField]
+        public FloatCurve thrustCurve = new FloatCurve(new Keyframe[2] { new Keyframe(0f, 1f), new Keyframe(1f, 1f) }); //defaults to a curve that acts like stock.
 
 
-        //Display Variables - Are ment to be visible in normal gameplay
-        [KSPField(guiName = "Secondary Status", guiActive = true)]
+        //Display module status. (currently disabled)
+        [KSPField(guiName = "Secondary Status", guiActive = false)]
         public string Status;
-
-        //Other Variables
 
         //Hook to ModuleEnginesFX
         [KSPField]
@@ -37,9 +41,15 @@ namespace Ksp_EnergyDrainer_EngineModule
         public double resCurrent;
         [KSPField]
         public double resTotal;
-        
+        //Green Ressource Gauge for staging tab.
+        [KSPField]
+        public ProtoStageIconInfo resGauge;
+        [KSPField]
+        public ResourceFlowMode resourceDrainedFlowMode;
+        [KSPField]
+        public float thrustCurveRatio = 1f;
 
-        //Boolean to check if launched
+        //Boolean to check if launched (might be useless)
         [KSPField]
         public bool isLaunched = false;
         //Boolean to check if flameout was caused by ModuleEnergyDrain
@@ -52,30 +62,69 @@ namespace Ksp_EnergyDrainer_EngineModule
         public bool resourceError = true;
 
 
+        //Localisation memos. use the following to get the displayname of the ressource
+        //PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName
+
+
         public override string GetModuleDisplayName() => "Engine Secondary Ressource Consumer";
         public override string GetInfo()
         {
             //this works
-            //return "<b><color=#99ff00ff>Consumes :</color></b>\n- <b>"+ resourceDrained +"</b> : " + consumption + "/sec. Max\n"+ Localizer.Format("#autoLOC_245153", new string[1] { XKCDColors.HexFormat.KSPUnnamedCyan });
-            return "<b><color=#99ff00ff>Consumes :</color></b>\n"+ Localizer.Format("#autoLOC_220756", new string[2] {resourceDrained,consumption.ToString()}) + Localizer.Format("#autoLOC_245153", new string[1] { XKCDColors.HexFormat.KSPUnnamedCyan });
+            return "Provided by <b>NoDeltaVPropEngineModule</b>\n\n<b><color=#99ff00ff>Consumes :</color></b>\n" + Localizer.Format("#autoLOC_220756", new string[2] { PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName, consumption.ToString()}) + GetFlowModeDescription();
         }
 
-        public override void OnStart(PartModule.StartState state)
+        public string GetFlowModeDescription()
+        {
+            resourceDrainedFlowMode = PartResourceLibrary.Instance.GetDefinition(resourceDrained).resourceFlowMode;
+            string flowModeDescription = "";
+            switch (resourceDrainedFlowMode)
+            {
+                case ResourceFlowMode.NO_FLOW:
+                    flowModeDescription += Localizer.Format("#autoLOC_245149");
+                    break;
+                case ResourceFlowMode.ALL_VESSEL:
+                case ResourceFlowMode.ALL_VESSEL_BALANCE:
+                    flowModeDescription += Localizer.Format("#autoLOC_245153", new string[1]
+                    {
+          XKCDColors.HexFormat.KSPUnnamedCyan
+                    });
+                    break;
+                case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                case ResourceFlowMode.STAGE_PRIORITY_FLOW_BALANCE:
+                    flowModeDescription += Localizer.Format("#autoLOC_245157", new string[1]
+                    {
+          XKCDColors.HexFormat.KSPBadassGreen
+                    });
+                    break;
+                case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                case ResourceFlowMode.STAGE_STACK_FLOW:
+                case ResourceFlowMode.STAGE_STACK_FLOW_BALANCE:
+                    flowModeDescription += Localizer.Format("#autoLOC_245162", new string[1]
+                    {
+          XKCDColors.HexFormat.YellowishOrange
+                    });
+                    break;
+            }
+            return flowModeDescription;
+        }
+
+    public override void OnStart(PartModule.StartState state)
         {
             base.OnStart(state);
             {
-                // possible improvement
-                // could probably destroy the module in the editor, that way i could remove the isLaunched variable and the check for it every FixedUpdate.
+                Debug.Log("[ModuleEnergyDrain]:" + "OnStart");
                 if (state != StartState.Editor && state != StartState.None)
                 {
                     //things here won't get run either way, just keeping around to know it doesn't work.
-                    Debug.Log("[ModuleEnergyDrain]:" + "ONSTART TRIGGER");
+                    Debug.Log("[ModuleEnergyDrain]:" + "Module Start");
                     isLaunched = true;
                     InitialiseModule();
                 }
                 else
                 {
-
+                    Debug.Log("[ModuleEnergyDrain]:" + "InEditor");
+                    //unsure if necessary. can be removed without issues.
+                    //Destroy(this);
                 }
             }
         }
@@ -88,10 +137,6 @@ namespace Ksp_EnergyDrainer_EngineModule
                 //Get the hook to the ModuleEnginesFX, and the hash to the ressource drained. This worked earlier : this.part.FindModuleImplementing<ModuleEnginesFX>();
                 EngineModule = this.part.FindModuleImplementing<ModuleEnginesFX>();
                 resHash = PartResourceLibrary.Instance.GetDefinition(resourceDrained).id;
-                Debug.Log("[ModuleEnergyDrain]:" + "resHash");
-                Debug.Log("[ModuleEnergyDrain]:" + resHash);
-                Debug.Log("[ModuleEnergyDrain]:" + "EngineModule");
-                Debug.Log("[ModuleEnergyDrain]:" + EngineModule.currentThrottle);
             }
             catch (Exception e) 
             {
@@ -122,10 +167,38 @@ namespace Ksp_EnergyDrainer_EngineModule
             }
             Status = "Initialised, waiting for FixedUpdate";
         }
+        
+        //Engine ressource Gauge stuff
+        public void ResetPropellantGauge()
+        {
+            if (resGauge != null)
+            {
+                this.part.stackIcon.RemoveInfo(resGauge);
+                resGauge = null;
+            }
+        }
+        public void UpdatePropellantGauge()
+        {
+            if (resGauge == null)
+            {
+                resGauge = this.part.stackIcon.DisplayInfo();
+                if (resGauge == null)
+                    return;
+                resGauge.SetLength(2f);
+                resGauge.SetMsgBgColor(new Color(0.517f, 0.718f, 0.004f, 0.6f)); //DarkLime
+                resGauge.SetMsgTextColor(new Color(0.658f, 1f, 0.016f, 0.6f)); //ElectricLime
+                resGauge.SetMessage(PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName);
+                resGauge.SetProgressBarBgColor(new Color(0.517f, 0.718f, 0.004f, 0.6f)); //DarkLime
+                resGauge.SetProgressBarColor(new Color(1f, 1f, 0.078f, 0.6f)); //Yellow
+            }
+            if (resGauge == null)
+                return;
+            resGauge.SetValue((float)resCurrent, 0f, (float)resTotal);
+        }
 
         public void FixedUpdate()
         {
-            //to prevent it running in editor.
+            //to prevent it running in editor. (might no longer be needed)
             if (isLaunched)
             {
                 if (hookError == true || resourceError == true)
@@ -133,23 +206,32 @@ namespace Ksp_EnergyDrainer_EngineModule
                     InitialiseModule();
                 }
 
+
                 this.vessel.GetConnectedResourceTotals(resHash, out resCurrent, out resTotal);
-                //EngineModule.isEnabled doesn't seem to work, as it might always be enabled ?
                 if (EngineModule.EngineIgnited)
                 {
                     //get the consumption by using the base consumption, the amount of time since last update, and the current throttle.
                     double consumptionDelta = consumption * TimeWarp.fixedDeltaTime * EngineModule.currentThrottle;
+                    //if using consumptionCurve, then multiply the consumptionDelta by the consumptionCurve ratio
+                    if (useConsumptionCurve)
+                    {
+                        consumptionDelta *= consumptionCurve.Evaluate((float)(resCurrent / resTotal));
+                    }
                     if (useThrustCurve)
                     {
-                        consumptionDelta *= thrustCurve.Evaluate((float)(resCurrent / resTotal));
+                        thrustCurveRatio = thrustCurve.Evaluate((float)(resCurrent / resTotal));
+                        consumptionDelta *= thrustCurveRatio;
                     }
                     //drain the ressource
-                    double resReturn = this.vessel.RequestResource(this.vessel.Parts[0], resHash, consumptionDelta, false);
+                    double resReturn = this.part.RequestResource(resHash, consumptionDelta, resourceDrainedFlowMode);
                     //check if it managed to drain what was needed. 0 might not be valid value
                     if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && resCurrent != 0)
                     {
-                        //Optionally do some other stuff while engine is running.
                         Status = "Running";
+                        Debug.Log("[ModuleEnergyDrain]:" + "beforeUpdate");
+                        UpdatePropellantGauge();
+                        Debug.Log("[ModuleEnergyDrain]:" + "afterUpdate");
+                        //Optionally do some other stuff while engine is running.
                     }
                     else
                     {
@@ -159,6 +241,9 @@ namespace Ksp_EnergyDrainer_EngineModule
                 }
                 else
                 {
+                    Debug.Log("[ModuleEnergyDrain]:" + "beforeReset");
+                    ResetPropellantGauge();
+                    Debug.Log("[ModuleEnergyDrain]:" + "afterReset");
                     //check if there was a error loading
                     if (!hookError && !resourceError)
                     {
@@ -174,8 +259,9 @@ namespace Ksp_EnergyDrainer_EngineModule
                         }
                         else
                         {
-                            Status = "Out of " + resourceDrained;
-                            EngineModule.Flameout("Out of " + resourceDrained);
+
+                            Status = Localizer.Format("#autoLOC_219085", new string[1] { PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName });
+                            EngineModule.Flameout(Localizer.Format("#autoLOC_219085", new string[1] { PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName }));
                             flameoutDrainResource = true;
                         }
                     }

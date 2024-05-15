@@ -1,5 +1,3 @@
-C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\Ksp-EnergyDrainer-EngineModule.dll
-C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\Ksp-EnergyDrainer-EngineModule.pdb
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\Assembly-CSharp.dll
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\UnityEngine.CoreModule.dll
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\UnityEngine.dll
@@ -68,5 +66,8 @@ C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\Ksp-EnergyDrainer-EngineModule.csproj.AssemblyReference.cache
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\Ksp-EnergyDrainer-EngineModule.csproj.CoreCompileInputs.cache
 C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\Ksp-Ener.A98DEC63.Up2Date
-C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\Ksp-EnergyDrainer-EngineModule.dll
-C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\Ksp-EnergyDrainer-EngineModule.pdb
+C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\NoDeltaVPropEngineModule.dll
+C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\NoDeltaVPropEngineModule.pdb
+C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\bin\Debug\0Harmony.dll
+C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\NoDeltaVPropEngineModule.dll
+C:\Users\Lucas\Documents\GitHub\KSP-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\Ksp-EnergyDrainer-EngineModule\obj\Debug\NoDeltaVPropEngineModule.pdb
