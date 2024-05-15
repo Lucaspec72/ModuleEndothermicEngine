@@ -19,13 +19,14 @@ namespace NoDeltaVPropEngineModule
         {
             static void Postfix(ModuleEngines __instance, ref double __result)
             {
-                if (HighLogic.LoadedSceneIsFlight) //might edit this check at some point to apply this when the vessel exists rather than when in flight mode. (DUCT TAPE FIX)
+                if (HighLogic.LoadedSceneIsFlight)
                 {
                     NoDeltaVPropEngineModule NoDVPropModule = __instance.part.FindModuleImplementing<NoDeltaVPropEngineModule>();
                     if (NoDVPropModule)
                     {
                         if (NoDVPropModule.useThrustCurve)
                         {
+                            __instance.resultingThrust *= NoDVPropModule.thrustCurveRatio;
                             __result *= NoDVPropModule.thrustCurveRatio;
                         }
                     }

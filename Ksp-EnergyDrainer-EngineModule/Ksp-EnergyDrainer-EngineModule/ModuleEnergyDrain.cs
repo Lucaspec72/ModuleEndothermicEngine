@@ -32,7 +32,7 @@ namespace NoDeltaVPropEngineModule
 
         //Hook to ModuleEnginesFX
         [KSPField]
-        public ModuleEnginesFX EngineModule;
+        public ModuleEngines EngineModule;
         //Resource Hash
         [KSPField]
         public int resHash = 0;
@@ -134,8 +134,9 @@ namespace NoDeltaVPropEngineModule
             //A HORRIBLE MESS, but it works
             try
             {
-                //Get the hook to the ModuleEnginesFX, and the hash to the ressource drained. This worked earlier : this.part.FindModuleImplementing<ModuleEnginesFX>();
-                EngineModule = this.part.FindModuleImplementing<ModuleEnginesFX>();
+                //Get the hook to the ModuleEngines, and the hash to the ressource drained. This worked earlier : this.part.FindModuleImplementing<ModuleEnginesFX>();
+                EngineModule = this.part.FindModuleImplementing<ModuleEngines>();
+                //EngineModule = this.part.FindModuleImplementing<ModuleEnginesFX>();
                 resHash = PartResourceLibrary.Instance.GetDefinition(resourceDrained).id;
             }
             catch (Exception e) 
@@ -148,22 +149,22 @@ namespace NoDeltaVPropEngineModule
             {
                 //Base Errors are here to see if things run. It should be updated as soon as the next update. if it doesn't, there's a problem somewhere.
                 hookError = false;
-                Debug.Log("[ModuleEnergyDrain]: Base Hook Log (no-error)");
+                Debug.Log("[ModuleEnergyDrain]: Engine Hook Log (no-error)");
             }
             else
             {
                 hookError = true;
-                Debug.Log("[ModuleEnergyDrain]: Base Hook Log (ERROR)");
+                Debug.Log("[ModuleEnergyDrain]: Engine Hook Log (ERROR)");
             }
             if (resHash != 0)
             {
                 resourceError = false;
-                Debug.Log("[ModuleEnergyDrain]: Base Resource Log (no-error)");
+                Debug.Log("[ModuleEnergyDrain]: Resource Hash Log (no-error)");
             }
             else
             {
                 resourceError = true;
-                Debug.Log("[ModuleEnergyDrain]: Base Resource Log (ERROR)");
+                Debug.Log("[ModuleEnergyDrain]: Resource Hash Log (ERROR)");
             }
             Status = "Initialised, waiting for FixedUpdate";
         }
@@ -198,11 +199,13 @@ namespace NoDeltaVPropEngineModule
 
         public void FixedUpdate()
         {
+            Debug.Log("[ModuleEnergyDrain]:" + "FixedUpdate");
             //to prevent it running in editor. (might no longer be needed)
             if (isLaunched)
             {
                 if (hookError == true || resourceError == true)
                 {
+                    Debug.Log("[ModuleEnergyDrain]:" + "FixedUpdateError");
                     InitialiseModule();
                 }
 
@@ -220,17 +223,21 @@ namespace NoDeltaVPropEngineModule
                     if (useThrustCurve)
                     {
                         thrustCurveRatio = thrustCurve.Evaluate((float)(resCurrent / resTotal));
+                        //might not even be necessary, EngineModule.currentThrottle might have the multiplier applied. don't think it's the case, but will have to test.
                         consumptionDelta *= thrustCurveRatio;
                     }
-                    //drain the ressource
-                    double resReturn = this.part.RequestResource(resHash, consumptionDelta, resourceDrainedFlowMode);
+                    //Not sure if necessary, but think it might cause a crash if you run RequestResource when there's no storage of that resource onboard.
+                    double resReturn = 0f;
+                    if (resCurrent != 0)
+                    {
+                        //drain the ressource
+                        resReturn = this.part.RequestResource(resHash, consumptionDelta, resourceDrainedFlowMode);
+                    }
                     //check if it managed to drain what was needed. 0 might not be valid value
-                    if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && resCurrent != 0)
+                    if (Math.Abs(consumptionDelta - resReturn) <= 0.001 && resCurrent != 0) //the resCurrent check is probably not needed now that i check it above, but it's not broke, so don't fix it.
                     {
                         Status = "Running";
-                        Debug.Log("[ModuleEnergyDrain]:" + "beforeUpdate");
                         UpdatePropellantGauge();
-                        Debug.Log("[ModuleEnergyDrain]:" + "afterUpdate");
                         //Optionally do some other stuff while engine is running.
                     }
                     else
