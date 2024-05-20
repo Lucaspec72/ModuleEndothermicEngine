@@ -21,9 +21,14 @@ namespace NoDeltaVPropEngineModule
         [KSPField]
         public bool useThrustCurve = false;
         [KSPField]
+        public bool useThrottleCurve = false;
+        [KSPField]
         public FloatCurve consumptionCurve = new FloatCurve(new Keyframe[2]{new Keyframe(0f, 1f), new Keyframe(1f, 1f)}); //defaults to a curve that acts like stock.
         [KSPField]
         public FloatCurve thrustCurve = new FloatCurve(new Keyframe[2] { new Keyframe(0f, 1f), new Keyframe(1f, 1f) }); //defaults to a curve that acts like stock.
+        [KSPField]
+        public FloatCurve throttleCurve = new FloatCurve(new Keyframe[2] { new Keyframe(1f, 1f), new Keyframe(1f, 1f) }); //defaults to a curve that acts like stock.
+
 
 
         //Display module status. (currently disabled)
@@ -225,6 +230,10 @@ namespace NoDeltaVPropEngineModule
                         thrustCurveRatio = thrustCurve.Evaluate((float)(resCurrent / resTotal));
                         //might not even be necessary, EngineModule.currentThrottle might have the multiplier applied. don't think it's the case, but will have to test.
                         consumptionDelta *= thrustCurveRatio;
+                    }
+                    if (useThrottleCurve)
+                    {
+                        consumptionDelta *= throttleCurve.Evaluate((float)EngineModule.currentThrottle); ;
                     }
                     //Not sure if necessary, but think it might cause a crash if you run RequestResource when there's no storage of that resource onboard.
                     double resReturn = 0f;
