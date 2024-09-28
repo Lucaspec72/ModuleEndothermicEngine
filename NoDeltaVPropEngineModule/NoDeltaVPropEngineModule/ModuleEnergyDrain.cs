@@ -28,6 +28,10 @@ namespace NoDeltaVPropEngineModule
         public FloatCurve thrustCurve = new FloatCurve(new Keyframe[2] { new Keyframe(0f, 1f), new Keyframe(1f, 1f) }); //defaults to a curve that acts like stock.
         [KSPField]
         public FloatCurve throttleCurve = new FloatCurve(new Keyframe[2] { new Keyframe(1f, 1f), new Keyframe(1f, 1f) }); //defaults to a curve that acts like stock.
+        [KSPField]
+        public Color progressBarBgColor = new Color(0.517f, 0.718f, 0.004f, 0.6f); //Default is DarkLime
+        [KSPField]
+        public Color progressBarColor = new Color(1f, 1f, 0.078f, 0.6f); //default is Yellow
 
 
 
@@ -194,8 +198,8 @@ namespace NoDeltaVPropEngineModule
                 resGauge.SetMsgBgColor(new Color(0.517f, 0.718f, 0.004f, 0.6f)); //DarkLime
                 resGauge.SetMsgTextColor(new Color(0.658f, 1f, 0.016f, 0.6f)); //ElectricLime
                 resGauge.SetMessage(PartResourceLibrary.Instance.GetDefinition(resourceDrained).displayName);
-                resGauge.SetProgressBarBgColor(new Color(0.517f, 0.718f, 0.004f, 0.6f)); //DarkLime
-                resGauge.SetProgressBarColor(new Color(1f, 1f, 0.078f, 0.6f)); //Yellow
+                resGauge.SetProgressBarBgColor(progressBarBgColor);
+                resGauge.SetProgressBarColor(progressBarColor);
             }
             if (resGauge == null)
                 return;
